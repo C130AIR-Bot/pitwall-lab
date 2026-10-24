@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101216">
+  <meta name="description" content="Pitwall Lab：F1 轮胎策略模拟、冠军概率推演与赛周末规划工具。">
+  <title>Pitwall Lab — F1 race weekend tools</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="./index.html" aria-label="Pitwall Lab">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span><b>PITWALL</b><small>LAB / F1-DRS</small></span>
+      </a>
+      <div class="topbar-meta">
+        <span class="live-dot"></span>
+        <span>RACE ENGINEERING SUITE</span>
+        <span class="topbar-divider"></span>
+        <span id="localClock">LOCAL TIME</span>
+      </div>
+      <a class="back-link" href="https://github.com/C130AIR-Bot/pitwall-lab"><span>↗</span> 项目仓库</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> THE FAN'S PIT WALL</div>
+          <h1>把每个决定，<em>算清楚。</em></h1>
+          <p>推演轮胎策略、计算争冠路径，再把整个比赛周末安排妥当。</p>
+        </div>
+        <div class="hero-stamp">
+          <span class="stamp-label">TOOLKIT</span>
+          <strong>03</strong>
+          <span>RACE DAY<br>MODULES</span>
+        </div>
+      </section>
+
+      <nav class="module-tabs" aria-label="工具模块">
+        <button class="tab-button active" data-tab="strategy" type="button"><span class="tab-index">01</span><span>策略实验室</span><span class="tab-arrow">↗</span></button>
+        <button class="tab-button" data-tab="championship" type="button"><span class="tab-index">02</span><span>冠军推演</span><span class="tab-arrow">↗</span></button>
+        <button class="tab-button" data-tab="weekend" type="button"><span class="tab-index">03</span><span>周末作战板</span><span class="tab-arrow">↗</span></button>
+      </nav>
+
+      <section class="module active" id="module-strategy">
+        <div class="section-heading">
+          <div><span class="section-kicker">RACE STRATEGY / 01</span><h2>轮胎策略实验室</h2></div>
+          <p>调整赛道与轮胎参数，让不同进站窗口在同一组随机比赛条件下对跑。</p>
+        </div>
+        <div class="strategy-layout">
+          <aside class="panel setup-panel">
+            <div class="panel-heading"><div><span class="panel-number">A</span><h3>比赛条件</h3></div><span class="panel-caption">EDITABLE INPUTS</span></div>
+            <div class="field-grid">
+              <label class="field"><span>赛道 / 场景</span><input id="circuitName" type="text" value="自定义赛道" maxlength="36"></label>
+              <label class="field"><span>比赛圈数</span><div class="input-unit"><input id="raceLaps" type="number" min="12" max="90" value="56"><small>LAPS</small></div></label>
+              <label class="field"><span>基准单圈</span><div class="input-unit"><input id="baseLap" type="number" min="45" max="180" step="0.1" value="92.0"><small>SEC</small></div></label>
+              <label class="field"><span>进站损失</span><div class="input-unit"><input id="pitLoss" type="number" min="10" max="45" step="0.1" value="21.5"><small>SEC</small></div></label>
+              <label class="field"><span>安全车概率</span><div class="input-unit"><input id="scChance" type="number" min="0" max="100" value="32"><small>%</small></div></label>
+              <label class="field"><span>安全车进站节省</span><div class="input-unit"><input id="scSaving" type="number" min="0" max="25" step="0.1" value="9"><small>SEC</small></div></label>
+              <label class="field"><span>降雨概率</span><div class="input-unit"><input id="rainChance" type="number" min="0" max="100" value="12"><small>%</small></div></label>
+              <label class="field"><span>新胎抓地收益</span><div class="input-unit"><input id="freshBonus" type="number" min="0" max="3" step="0.05" value="0.65"><small>SEC/LAP</small></div></label>
+              <label class="field"><span>出站遇慢车概率</span><div class="input-unit"><input id="trafficChance" type="number" min="0" max="100" value="22"><small>%</small></div></label>
+              <label class="field"><span>慢车损失</span><div class="input-unit"><input id="trafficLoss" type="number" min="0" max="15" step="0.1" value="2.2"><small>SEC</small></div></label>
+            </div>
+            <div class="rule-row">
+              <label class="switch-label"><input id="dryRule" type="checkbox" checked><span class="switch"></span><span>干地策略使用至少两种干胎</span></label>
+              <span class="info-tip" title="勾选后，纯干地的策略必须包含至少两种不同的软、中、硬胎。">i</span>
+            </div>
+            <div class="compound-heading"><span>轮胎模型</span><span>PACE / DEGRADATION / LIFE</span></div>
+            <div class="compound-table-wrap">
+              <table class="compound-table">
+                <thead><tr><th>COMPOUND</th><th>PACE SEC</th><th>DEG / LAP</th><th>MAX STINT</th></tr></thead>
+                <tbody>
+                  <tr><th><i class="tyre-dot soft"></i>软胎</th><td><input class="tyre-input" data-tyre="S" data-key="pace" type="number" step="0.05" value="-0.38" aria-label="软胎基础速度差"></td><td><input class="tyre-input" data-tyre="S" data-key="deg" type="number" min="0" step="0.005" value="0.115" aria-label="软胎每圈退化"></td><td><input class="tyre-input" data-tyre="S" data-key="life" type="number" min="8" max="90" value="28" aria-label="软胎最大连续圈数"></td></tr>
+                  <tr><th><i class="tyre-dot medium"></i>中性胎</th><td><input class="tyre-input" data-tyre="M" data-key="pace" type="number" step="0.05" value="0" aria-label="中性胎基础速度差"></td><td><input class="tyre-input" data-tyre="M" data-key="deg" type="number" min="0" step="0.005" value="0.065" aria-label="中性胎每圈退化"></td><td><input class="tyre-input" data-tyre="M" data-key="life" type="number" min="8" max="90" value="36" aria-label="中性胎最大连续圈数"></td></tr>
+                  <tr><th><i class="tyre-dot hard"></i>硬胎</th><td><input class="tyre-input" data-tyre="H" data-key="pace" type="number" step="0.05" value="0.28" aria-label="硬胎基础速度差"></td><td><input class="tyre-input" data-tyre="H" data-key="deg" type="number" min="0" step="0.005" value="0.04" aria-label="硬胎每圈退化"></td><td><input class="tyre-input" data-tyre="H" data-key="life" type="number" min="8" max="90" value="48" aria-label="硬胎最大连续圈数"></td></tr>
+                  <tr><th><i class="tyre-dot inter"></i>半雨胎</th><td><input class="tyre-input" data-tyre="I" data-key="pace" type="number" step="0.05" value="3.8" aria-label="半雨胎基础速度差"></td><td><input class="tyre-input" data-tyre="I" data-key="deg" type="number" min="0" step="0.005" value="0.055" aria-label="半雨胎每圈退化"></td><td><input class="tyre-input" data-tyre="I" data-key="life" type="number" min="8" max="90" value="36" aria-label="半雨胎最大连续圈数"></td></tr>
+                  <tr><th><i class="tyre-dot wet"></i>全雨胎</th><td><input class="tyre-input" data-tyre="W" data-key="pace" type="number" step="0.05" value="9.5" aria-label="全雨胎基础速度差"></td><td><input class="tyre-input" data-tyre="W" data-key="deg" type="number" min="0" step="0.005" value="0.05" aria-label="全雨胎每圈退化"></td><td><input class="tyre-input" data-tyre="W" data-key="life" type="number" min="8" max="90" value="30" aria-label="全雨胎最大连续圈数"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="setup-bottom">
+              <label class="field sim-field"><span>模拟场次</span><div class="input-unit"><input id="simCount" type="number" min="100" max="3000" step="100" value="600"><small>RUNS</small></div></label>
+              <button class="primary-button" id="runSimulation" type="button"><span>运行策略模拟</span><span class="button-arrow">→</span></button>
+            </div>
+            <div class="model-note"><span class="note-icon">ⓘ</span><span>演示模型：参数均可编辑，结果用于策略比较，不是车队遥测或官方预测。</span></div>
+          </aside>
+
+          <div class="results-column">
+            <div class="panel result-panel">
+              <div class="panel-heading"><div><span class="panel-number red">B</span><h3>模拟结果</h3></div><span id="strategyStatus" class="panel-caption">等待计算</span></div>
+              <div class="result-summary">
+                <div class="summary-main"><span class="summary-label">当前模型领先策略</span><strong id="bestPlanName">—</strong><span id="bestPlanMeta" class="summary-sub">修改左侧参数并运行模拟</span></div>
+                <div class="summary-time"><span>预测总时长</span><strong id="bestPlanTime">—<small></small></strong></div>
+              </div>
+              <div class="summary-stats">
+                <div><span>模拟胜率</span><strong id="bestWinRate">—</strong></div>
+                <div><span>中位圈速均值</span><strong id="bestMedian">—</strong></div>
+                <div><span>90% 用时区间</span><strong id="bestRange">—</strong></div>
+              </div>
+              <div class="chart-heading"><span>前五名策略 · 预计完赛时间</span><span>越短越好</span></div>
+              <div class="strategy-chart" id="strategyChart"><div class="empty-state">点击“运行策略模拟”开始比较方案。</div></div>
+            </div>
+            <div class="panel detail-panel">
+              <div class="panel-heading"><div><span class="panel-number">C</span><h3>策略拆解</h3></div><span class="panel-caption">STINT PLAN</span></div>
+              <div id="selectedPlan" class="selected-plan"><div class="empty-state">运行后查看首选方案的进站圈数与轮胎分配。</div></div>
+            </div>
+            <div class="panel insight-panel">
+              <div class="insight-symbol">↗</div><div><strong>安全车窗口影响</strong><p id="scInsight">模拟会为所有策略抽取相同的安全车、天气与比赛波动条件，再比较平均用时和胜率。</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="module" id="module-championship">
+        <div class="section-heading">
+          <div><span class="section-kicker">TITLE SCENARIOS / 02</span><h2>冠军推演器</h2></div>
+          <p>把当前积分、剩余分站和预期完赛位置放进模型，估算两位车手的争冠概率。</p>
+        </div>
+        <div class="champ-layout">
+          <div class="panel champ-input-panel">
+            <div class="panel-heading"><div><span class="panel-number">A</span><h3>赛季与积分</h3></div><span class="panel-caption">YOUR SCENARIO</span></div>
+            <div class="field-grid champ-global">
+              <label class="field"><span>剩余大奖赛</span><div class="input-unit"><input id="remainingRaces" type="number" min="1" max="24" value="8"><small>GP</small></div></label>
+              <label class="field"><span>其中冲刺赛周末</span><div class="input-unit"><input id="remainingSprints" type="number" min="0" max="24" value="2"><small>SPRINT</small></div></label>
+              <label class="field"><span>赛季模拟次数</span><div class="input-unit"><input id="champRuns" type="number" min="500" max="20000" step="500" value="5000"><small>RUNS</small></div></label>
+            </div>
+            <div class="driver-grid">
+              <article class="driver-input driver-a">
+                <div class="driver-band"><span class="driver-letter">01</span><span>CHALLENGER A</span></div>
+                <label class="field"><span>车手名称</span><input id="driverAName" type="text" value="车手 A" maxlength="24"></label>
+                <div class="driver-metrics">
+                  <label class="field"><span>当前积分</span><input id="driverAPoints" type="number" min="0" max="1000" value="120"></label>
+                  <label class="field"><span>预期正赛名次</span><input id="driverAFinish" type="number" min="1" max="20" step="0.1" value="3.5"></label>
+                  <label class="field"><span>预期冲刺名次</span><input id="driverASprint" type="number" min="1" max="20" step="0.1" value="3.5"></label>
+                  <label class="field"><span>单站波动（名次）</span><input id="driverASigma" type="number" min="0" max="10" step="0.1" value="2.2"></label>
+                </div>
+              </article>
+              <article class="driver-input driver-b">
+                <div class="driver-band"><span class="driver-letter">02</span><span>CHALLENGER B</span></div>
+                <label class="field"><span>车手名称</span><input id="driverBName" type="text" value="车手 B" maxlength="24"></label>
+                <div class="driver-metrics">
+                  <label class="field"><span>当前积分</span><input id="driverBPoints" type="number" min="0" max="1000" value="108"></label>
+                  <label class="field"><span>预期正赛名次</span><input id="driverBFinish" type="number" min="1" max="20" step="0.1" value="4.2"></label>
+                  <label class="field"><span>预期冲刺名次</span><input id="driverBSprint" type="number" min="1" max="20" step="0.1" value="4.2"></label>
+                  <label class="field"><span>单站波动（名次）</span><input id="driverBSigma" type="number" min="0" max="10" step="0.1" value="2.6"></label>
+                </div>
+              </article>
+            </div>
+            <div class="champ-actions"><p>按默认积分表模拟完赛位置；正赛前 10 名和冲刺赛前 8 名得分。</p><button class="primary-button" id="runChampionship" type="button"><span>推演争冠概率</span><span class="button-arrow">→</span></button></div>
+          </div>
+          <div class="panel champ-results">
+            <div class="panel-heading"><div><span class="panel-number red">B</span><h3>概率与积分走势</h3></div><span id="champStatus" class="panel-caption">等待计算</span></div>
+            <div class="title-odds">
+              <div class="odds-side odds-a"><span id="oddsAName">车手 A</span><strong id="oddsA">—</strong><small>夺冠概率</small></div>
+              <div class="odds-center"><span>VS</span><i></i></div>
+              <div class="odds-side odds-b"><span id="oddsBName">车手 B</span><strong id="oddsB">—</strong><small>夺冠概率</small></div>
+            </div>
+            <div class="probability-track"><div id="oddsTrackA"></div><div id="oddsTrackTie"></div><div id="oddsTrackB"></div></div>
+            <div class="champ-stat-grid">
+              <div><span>车手 A 預計期末積分</span><strong id="meanPointsA">—</strong></div>
+              <div><span>車手 B 預計期末積分</span><strong id="meanPointsB">—</strong></div>
+              <div><span>平均期末分差（A − B）</span><strong id="meanGap">—</strong></div>
+              <div><span>模型判定平分</span><strong id="tieOdds">—</strong></div>
+            </div>
+            <div class="champ-readout"><span class="readout-mark">!</span><p id="champReadout">填写积分与预期名次后运行模拟。概率只反映你输入的表现假设。</p></div>
+            <div class="points-key"><b>默认积分</b><span>正赛：25 · 18 · 15 · 12 · 10 · 8 · 6 · 4 · 2 · 1</span><span>冲刺：8 · 7 · 6 · 5 · 4 · 3 · 2 · 1</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="module" id="module-weekend">
+        <div class="section-heading">
+          <div><span class="section-kicker">WEEKEND CONTROL / 03</span><h2>周末作战板</h2></div>
+          <p>添加练习赛、排位赛与正赛时间；清单和赛程保存在当前浏览器，可导出为日历文件。</p>
+        </div>
+        <div class="weekend-layout">
+          <div class="panel schedule-panel">
+            <div class="panel-heading"><div><span class="panel-number">A</span><h3>赛程与倒计时</h3></div><span class="panel-caption">LOCAL PLANNER</span></div>
+            <div class="next-session"><div class="next-label"><span class="live-dot"></span> NEXT SESSION</div><strong id="nextCountdown">添加一场赛程</strong><span id="nextSessionLabel">时间按照此设备的本地时区解析。</span></div>
+            <form id="sessionForm" class="session-form">
+              <label class="field"><span>赛段名称</span><input id="sessionName" type="text" maxlength="40" placeholder="例如：正赛 / 排位赛" required></label>
+              <label class="field"><span>开始时间（本地）</span><input id="sessionTime" type="datetime-local" required></label>
+              <button class="primary-button" type="submit"><span>添加到作战板</span><span class="button-arrow">+</span></button>
+            </form>
+            <div class="schedule-toolbar"><span id="scheduleCount">0 场赛程</span><button id="exportCalendar" class="text-button" type="button">导出 .ics 日历 ↗</button></div>
+            <div id="sessionList" class="session-list"><div class="empty-state">暂无赛程。先添加一场比赛周末活动。</div></div>
+          </div>
+          <div class="panel checklist-panel">
+            <div class="panel-heading"><div><span class="panel-number red">B</span><h3>观赛清单</h3></div><span class="panel-caption">RACE WEEK ROUTINE</span></div>
+            <div class="checklist-progress"><div><strong id="checkProgress">0%</strong><span>已完成</span></div><div class="progress-track"><i id="checkProgressBar"></i></div></div>
+            <div id="checklist" class="checklist"></div>
+            <form id="taskForm" class="task-form"><input id="newTask" type="text" maxlength="56" placeholder="添加自定义事项…" aria-label="自定义事项"><button type="submit" aria-label="添加事项">＋</button></form>
+            <div class="storage-note"><span>◉</span> 赛程与清单只保存在本机浏览器。</div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <a href="https://github.com/C130AIR-Bot/pitwall-lab" target="_blank" rel="noreferrer">PITWALL LAB / C130AIR-BOT</a>
+        <span>Independent fan tool · No live telemetry · Model values are editable</span>
+        <a href="https://github.com/C130AIR-Bot/pitwall-lab">项目仓库 ↑</a>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
+
